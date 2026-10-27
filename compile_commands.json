@@ -1,0 +1,601 @@
+[
+  {
+    "file": "src/vector.cpp",
+    "arguments": [
+      "/usr/bin/g++",
+      "-std=c++23",
+      "-Wall",
+      "-Wextra",
+      "-fPIC",
+      "-Iinclude",
+      "-Iinclude/marx/graphics-internal/freetype",
+      "-Isrc",
+      "-Idependencies",
+      "-c",
+      "src/vector.cpp",
+      "-o",
+      "build/src/vector.o"
+    ],
+    "directory": "/home/max/dev/cpp/marx-graphics",
+    "output": "build/src/vector.o"
+  },
+  {
+    "file": "src/window.cpp",
+    "arguments": [
+      "/usr/bin/g++",
+      "-std=c++23",
+      "-Wall",
+      "-Wextra",
+      "-fPIC",
+      "-Iinclude",
+      "-Iinclude/marx/graphics-internal/freetype",
+      "-Isrc",
+      "-Idependencies",
+      "-c",
+      "src/window.cpp",
+      "-o",
+      "build/src/window.o"
+    ],
+    "directory": "/home/max/dev/cpp/marx-graphics",
+    "output": "build/src/window.o"
+  },
+  {
+    "file": "src/input/keyboard.cpp",
+    "arguments": [
+      "/usr/bin/g++",
+      "-std=c++23",
+      "-Wall",
+      "-Wextra",
+      "-fPIC",
+      "-Iinclude",
+      "-Iinclude/marx/graphics-internal/freetype",
+      "-Isrc",
+      "-Idependencies",
+      "-c",
+      "src/input/keyboard.cpp",
+      "-o",
+      "build/src/input/keyboard.o"
+    ],
+    "directory": "/home/max/dev/cpp/marx-graphics",
+    "output": "build/src/input/keyboard.o"
+  },
+  {
+    "file": "src/shapes/circle.cpp",
+    "arguments": [
+      "/usr/bin/g++",
+      "-std=c++23",
+      "-Wall",
+      "-Wextra",
+      "-fPIC",
+      "-Iinclude",
+      "-Iinclude/marx/graphics-internal/freetype",
+      "-Isrc",
+      "-Idependencies",
+      "-c",
+      "src/shapes/circle.cpp",
+      "-o",
+      "build/src/shapes/circle.o"
+    ],
+    "directory": "/home/max/dev/cpp/marx-graphics",
+    "output": "build/src/shapes/circle.o"
+  },
+  {
+    "file": "src/shapes/line.cpp",
+    "arguments": [
+      "/usr/bin/g++",
+      "-std=c++23",
+      "-Wall",
+      "-Wextra",
+      "-fPIC",
+      "-Iinclude",
+      "-Iinclude/marx/graphics-internal/freetype",
+      "-Isrc",
+      "-Idependencies",
+      "-c",
+      "src/shapes/line.cpp",
+      "-o",
+      "build/src/shapes/line.o"
+    ],
+    "directory": "/home/max/dev/cpp/marx-graphics",
+    "output": "build/src/shapes/line.o"
+  },
+  {
+    "file": "src/shapes/rectangle.cpp",
+    "arguments": [
+      "/usr/bin/g++",
+      "-std=c++23",
+      "-Wall",
+      "-Wextra",
+      "-fPIC",
+      "-Iinclude",
+      "-Iinclude/marx/graphics-internal/freetype",
+      "-Isrc",
+      "-Idependencies",
+      "-c",
+      "src/shapes/rectangle.cpp",
+      "-o",
+      "build/src/shapes/rectangle.o"
+    ],
+    "directory": "/home/max/dev/cpp/marx-graphics",
+    "output": "build/src/shapes/rectangle.o"
+  },
+  {
+    "file": "src/text/font.cpp",
+    "arguments": [
+      "/usr/bin/g++",
+      "-std=c++23",
+      "-Wall",
+      "-Wextra",
+      "-fPIC",
+      "-Iinclude",
+      "-Iinclude/marx/graphics-internal/freetype",
+      "-Isrc",
+      "-Idependencies",
+      "-c",
+      "src/text/font.cpp",
+      "-o",
+      "build/src/text/font.o"
+    ],
+    "directory": "/home/max/dev/cpp/marx-graphics",
+    "output": "build/src/text/font.o"
+  },
+  {
+    "file": "src/text/text.cpp",
+    "arguments": [
+      "/usr/bin/g++",
+      "-std=c++23",
+      "-Wall",
+      "-Wextra",
+      "-fPIC",
+      "-Iinclude",
+      "-Iinclude/marx/graphics-internal/freetype",
+      "-Isrc",
+      "-Idependencies",
+      "-c",
+      "src/text/text.cpp",
+      "-o",
+      "build/src/text/text.o"
+    ],
+    "directory": "/home/max/dev/cpp/marx-graphics",
+    "output": "build/src/text/text.o"
+  },
+  {
+    "file": "src/clock.cpp",
+    "arguments": [
+      "/usr/bin/g++",
+      "-std=c++23",
+      "-Wall",
+      "-Wextra",
+      "-fPIC",
+      "-Iinclude",
+      "-Iinclude/marx/graphics-internal/freetype",
+      "-Isrc",
+      "-Idependencies",
+      "-c",
+      "src/clock.cpp",
+      "-o",
+      "build/src/clock.o"
+    ],
+    "directory": "/home/max/dev/cpp/marx-graphics",
+    "output": "build/src/clock.o"
+  },
+  {
+    "file": "src/glad/gl.c",
+    "arguments": [
+      "/usr/bin/gcc",
+      "-Wall",
+      "-Wextra",
+      "-fPIC",
+      "-DFT2_BUILD_LIBRARY",
+      "-Iinclude",
+      "-Iinclude/marx/graphics-internal/freetype",
+      "-Isrc",
+      "-Idependencies",
+      "-c",
+      "src/glad/gl.c",
+      "-o",
+      "build/src/glad/gl.o"
+    ],
+    "directory": "/home/max/dev/cpp/marx-graphics",
+    "output": "build/src/glad/gl.o"
+  },
+  {
+    "file": "src/freetype/base/ftsystem.c",
+    "arguments": [
+      "/usr/bin/gcc",
+      "-Wall",
+      "-Wextra",
+      "-fPIC",
+      "-DFT2_BUILD_LIBRARY",
+      "-Iinclude",
+      "-Iinclude/marx/graphics-internal/freetype",
+      "-Isrc",
+      "-Idependencies",
+      "-c",
+      "src/freetype/base/ftsystem.c",
+      "-o",
+      "build/src/freetype/base/ftsystem.o"
+    ],
+    "directory": "/home/max/dev/cpp/marx-graphics",
+    "output": "build/src/freetype/base/ftsystem.o"
+  },
+  {
+    "file": "src/freetype/base/ftinit.c",
+    "arguments": [
+      "/usr/bin/gcc",
+      "-Wall",
+      "-Wextra",
+      "-fPIC",
+      "-DFT2_BUILD_LIBRARY",
+      "-Iinclude",
+      "-Iinclude/marx/graphics-internal/freetype",
+      "-Isrc",
+      "-Idependencies",
+      "-c",
+      "src/freetype/base/ftinit.c",
+      "-o",
+      "build/src/freetype/base/ftinit.o"
+    ],
+    "directory": "/home/max/dev/cpp/marx-graphics",
+    "output": "build/src/freetype/base/ftinit.o"
+  },
+  {
+    "file": "src/freetype/base/ftdebug.c",
+    "arguments": [
+      "/usr/bin/gcc",
+      "-Wall",
+      "-Wextra",
+      "-fPIC",
+      "-DFT2_BUILD_LIBRARY",
+      "-Iinclude",
+      "-Iinclude/marx/graphics-internal/freetype",
+      "-Isrc",
+      "-Idependencies",
+      "-c",
+      "src/freetype/base/ftdebug.c",
+      "-o",
+      "build/src/freetype/base/ftdebug.o"
+    ],
+    "directory": "/home/max/dev/cpp/marx-graphics",
+    "output": "build/src/freetype/base/ftdebug.o"
+  },
+  {
+    "file": "src/freetype/base/ftbase.c",
+    "arguments": [
+      "/usr/bin/gcc",
+      "-Wall",
+      "-Wextra",
+      "-fPIC",
+      "-DFT2_BUILD_LIBRARY",
+      "-Iinclude",
+      "-Iinclude/marx/graphics-internal/freetype",
+      "-Isrc",
+      "-Idependencies",
+      "-c",
+      "src/freetype/base/ftbase.c",
+      "-o",
+      "build/src/freetype/base/ftbase.o"
+    ],
+    "directory": "/home/max/dev/cpp/marx-graphics",
+    "output": "build/src/freetype/base/ftbase.o"
+  },
+  {
+    "file": "src/freetype/base/ftbbox.c",
+    "arguments": [
+      "/usr/bin/gcc",
+      "-Wall",
+      "-Wextra",
+      "-fPIC",
+      "-DFT2_BUILD_LIBRARY",
+      "-Iinclude",
+      "-Iinclude/marx/graphics-internal/freetype",
+      "-Isrc",
+      "-Idependencies",
+      "-c",
+      "src/freetype/base/ftbbox.c",
+      "-o",
+      "build/src/freetype/base/ftbbox.o"
+    ],
+    "directory": "/home/max/dev/cpp/marx-graphics",
+    "output": "build/src/freetype/base/ftbbox.o"
+  },
+  {
+    "file": "src/freetype/base/ftbitmap.c",
+    "arguments": [
+      "/usr/bin/gcc",
+      "-Wall",
+      "-Wextra",
+      "-fPIC",
+      "-DFT2_BUILD_LIBRARY",
+      "-Iinclude",
+      "-Iinclude/marx/graphics-internal/freetype",
+      "-Isrc",
+      "-Idependencies",
+      "-c",
+      "src/freetype/base/ftbitmap.c",
+      "-o",
+      "build/src/freetype/base/ftbitmap.o"
+    ],
+    "directory": "/home/max/dev/cpp/marx-graphics",
+    "output": "build/src/freetype/base/ftbitmap.o"
+  },
+  {
+    "file": "src/freetype/base/ftfstype.c",
+    "arguments": [
+      "/usr/bin/gcc",
+      "-Wall",
+      "-Wextra",
+      "-fPIC",
+      "-DFT2_BUILD_LIBRARY",
+      "-Iinclude",
+      "-Iinclude/marx/graphics-internal/freetype",
+      "-Isrc",
+      "-Idependencies",
+      "-c",
+      "src/freetype/base/ftfstype.c",
+      "-o",
+      "build/src/freetype/base/ftfstype.o"
+    ],
+    "directory": "/home/max/dev/cpp/marx-graphics",
+    "output": "build/src/freetype/base/ftfstype.o"
+  },
+  {
+    "file": "src/freetype/base/ftgasp.c",
+    "arguments": [
+      "/usr/bin/gcc",
+      "-Wall",
+      "-Wextra",
+      "-fPIC",
+      "-DFT2_BUILD_LIBRARY",
+      "-Iinclude",
+      "-Iinclude/marx/graphics-internal/freetype",
+      "-Isrc",
+      "-Idependencies",
+      "-c",
+      "src/freetype/base/ftgasp.c",
+      "-o",
+      "build/src/freetype/base/ftgasp.o"
+    ],
+    "directory": "/home/max/dev/cpp/marx-graphics",
+    "output": "build/src/freetype/base/ftgasp.o"
+  },
+  {
+    "file": "src/freetype/base/ftglyph.c",
+    "arguments": [
+      "/usr/bin/gcc",
+      "-Wall",
+      "-Wextra",
+      "-fPIC",
+      "-DFT2_BUILD_LIBRARY",
+      "-Iinclude",
+      "-Iinclude/marx/graphics-internal/freetype",
+      "-Isrc",
+      "-Idependencies",
+      "-c",
+      "src/freetype/base/ftglyph.c",
+      "-o",
+      "build/src/freetype/base/ftglyph.o"
+    ],
+    "directory": "/home/max/dev/cpp/marx-graphics",
+    "output": "build/src/freetype/base/ftglyph.o"
+  },
+  {
+    "file": "src/freetype/base/ftmm.c",
+    "arguments": [
+      "/usr/bin/gcc",
+      "-Wall",
+      "-Wextra",
+      "-fPIC",
+      "-DFT2_BUILD_LIBRARY",
+      "-Iinclude",
+      "-Iinclude/marx/graphics-internal/freetype",
+      "-Isrc",
+      "-Idependencies",
+      "-c",
+      "src/freetype/base/ftmm.c",
+      "-o",
+      "build/src/freetype/base/ftmm.o"
+    ],
+    "directory": "/home/max/dev/cpp/marx-graphics",
+    "output": "build/src/freetype/base/ftmm.o"
+  },
+  {
+    "file": "src/freetype/gzip/ftgzip.c",
+    "arguments": [
+      "/usr/bin/gcc",
+      "-Wall",
+      "-Wextra",
+      "-fPIC",
+      "-DFT2_BUILD_LIBRARY",
+      "-Iinclude",
+      "-Iinclude/marx/graphics-internal/freetype",
+      "-Isrc",
+      "-Idependencies",
+      "-c",
+      "src/freetype/gzip/ftgzip.c",
+      "-o",
+      "build/src/freetype/gzip/ftgzip.o"
+    ],
+    "directory": "/home/max/dev/cpp/marx-graphics",
+    "output": "build/src/freetype/gzip/ftgzip.o"
+  },
+  {
+    "file": "src/freetype/lzw/ftlzw.c",
+    "arguments": [
+      "/usr/bin/gcc",
+      "-Wall",
+      "-Wextra",
+      "-fPIC",
+      "-DFT2_BUILD_LIBRARY",
+      "-Iinclude",
+      "-Iinclude/marx/graphics-internal/freetype",
+      "-Isrc",
+      "-Idependencies",
+      "-c",
+      "src/freetype/lzw/ftlzw.c",
+      "-o",
+      "build/src/freetype/lzw/ftlzw.o"
+    ],
+    "directory": "/home/max/dev/cpp/marx-graphics",
+    "output": "build/src/freetype/lzw/ftlzw.o"
+  },
+  {
+    "file": "src/freetype/psnames/psnames.c",
+    "arguments": [
+      "/usr/bin/gcc",
+      "-Wall",
+      "-Wextra",
+      "-fPIC",
+      "-DFT2_BUILD_LIBRARY",
+      "-Iinclude",
+      "-Iinclude/marx/graphics-internal/freetype",
+      "-Isrc",
+      "-Idependencies",
+      "-c",
+      "src/freetype/psnames/psnames.c",
+      "-o",
+      "build/src/freetype/psnames/psnames.o"
+    ],
+    "directory": "/home/max/dev/cpp/marx-graphics",
+    "output": "build/src/freetype/psnames/psnames.o"
+  },
+  {
+    "file": "src/freetype/psaux/psaux.c",
+    "arguments": [
+      "/usr/bin/gcc",
+      "-Wall",
+      "-Wextra",
+      "-fPIC",
+      "-DFT2_BUILD_LIBRARY",
+      "-Iinclude",
+      "-Iinclude/marx/graphics-internal/freetype",
+      "-Isrc",
+      "-Idependencies",
+      "-c",
+      "src/freetype/psaux/psaux.c",
+      "-o",
+      "build/src/freetype/psaux/psaux.o"
+    ],
+    "directory": "/home/max/dev/cpp/marx-graphics",
+    "output": "build/src/freetype/psaux/psaux.o"
+  },
+  {
+    "file": "src/freetype/pshinter/pshinter.c",
+    "arguments": [
+      "/usr/bin/gcc",
+      "-Wall",
+      "-Wextra",
+      "-fPIC",
+      "-DFT2_BUILD_LIBRARY",
+      "-Iinclude",
+      "-Iinclude/marx/graphics-internal/freetype",
+      "-Isrc",
+      "-Idependencies",
+      "-c",
+      "src/freetype/pshinter/pshinter.c",
+      "-o",
+      "build/src/freetype/pshinter/pshinter.o"
+    ],
+    "directory": "/home/max/dev/cpp/marx-graphics",
+    "output": "build/src/freetype/pshinter/pshinter.o"
+  },
+  {
+    "file": "src/freetype/cff/cff.c",
+    "arguments": [
+      "/usr/bin/gcc",
+      "-Wall",
+      "-Wextra",
+      "-fPIC",
+      "-DFT2_BUILD_LIBRARY",
+      "-Iinclude",
+      "-Iinclude/marx/graphics-internal/freetype",
+      "-Isrc",
+      "-Idependencies",
+      "-c",
+      "src/freetype/cff/cff.c",
+      "-o",
+      "build/src/freetype/cff/cff.o"
+    ],
+    "directory": "/home/max/dev/cpp/marx-graphics",
+    "output": "build/src/freetype/cff/cff.o"
+  },
+  {
+    "file": "src/freetype/sfnt/sfnt.c",
+    "arguments": [
+      "/usr/bin/gcc",
+      "-Wall",
+      "-Wextra",
+      "-fPIC",
+      "-DFT2_BUILD_LIBRARY",
+      "-Iinclude",
+      "-Iinclude/marx/graphics-internal/freetype",
+      "-Isrc",
+      "-Idependencies",
+      "-c",
+      "src/freetype/sfnt/sfnt.c",
+      "-o",
+      "build/src/freetype/sfnt/sfnt.o"
+    ],
+    "directory": "/home/max/dev/cpp/marx-graphics",
+    "output": "build/src/freetype/sfnt/sfnt.o"
+  },
+  {
+    "file": "src/freetype/smooth/smooth.c",
+    "arguments": [
+      "/usr/bin/gcc",
+      "-Wall",
+      "-Wextra",
+      "-fPIC",
+      "-DFT2_BUILD_LIBRARY",
+      "-Iinclude",
+      "-Iinclude/marx/graphics-internal/freetype",
+      "-Isrc",
+      "-Idependencies",
+      "-c",
+      "src/freetype/smooth/smooth.c",
+      "-o",
+      "build/src/freetype/smooth/smooth.o"
+    ],
+    "directory": "/home/max/dev/cpp/marx-graphics",
+    "output": "build/src/freetype/smooth/smooth.o"
+  },
+  {
+    "file": "src/freetype/truetype/truetype.c",
+    "arguments": [
+      "/usr/bin/gcc",
+      "-Wall",
+      "-Wextra",
+      "-fPIC",
+      "-DFT2_BUILD_LIBRARY",
+      "-Iinclude",
+      "-Iinclude/marx/graphics-internal/freetype",
+      "-Isrc",
+      "-Idependencies",
+      "-c",
+      "src/freetype/truetype/truetype.c",
+      "-o",
+      "build/src/freetype/truetype/truetype.o"
+    ],
+    "directory": "/home/max/dev/cpp/marx-graphics",
+    "output": "build/src/freetype/truetype/truetype.o"
+  },
+  {
+    "file": "templates/keyboard.cpp",
+    "arguments": [
+      "/usr/bin/g++",
+      "-std=c++23",
+      "-Wall",
+      "-Wextra",
+      "-fPIC",
+      "-Iinclude",
+      "-Iinclude/marx/graphics-internal/freetype",
+      "-Isrc",
+      "-Idependencies",
+      "templates/keyboard.cpp",
+      "-o",
+      "bin/keyboard"
+    ],
+    "directory": "/home/max/dev/cpp/marx-graphics",
+    "output": "bin/keyboard"
+  }
+]
