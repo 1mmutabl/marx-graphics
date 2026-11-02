@@ -7,14 +7,20 @@
 #include <X11/X.h>
 #include <X11/XF86keysym.h>
 #include <X11/XKBlib.h>
+#include <X11/Xatom.h>
 #include <X11/Xlib.h>
 #include <X11/Xutil.h>
+#include <X11/cursorfont.h>
+#include <algorithm>
 #include <array>
 #include <chrono>
+#include <clocale>
 #include <cmath>
+#include <deque>
 #include <exception>
 #include <iostream>
 #include <memory>
+#include <numbers>
 #include <string>
 #include <thread>
 #include <vector>
@@ -22,17 +28,21 @@
 #include "marx/graphics-internal/color.hpp"
 #include "marx/graphics-internal/event.hpp"
 #include "marx/graphics-internal/input/keyboard.hpp"
+#include "marx/graphics-internal/input/mouse.hpp"
 #include "marx/graphics-internal/shapes/circle.hpp"
 #include "marx/graphics-internal/shapes/line.hpp"
 #include "marx/graphics-internal/shapes/rectangle.hpp"
 #include "marx/graphics-internal/text/font.hpp"
 #include "marx/graphics-internal/text/text.hpp"
+#include "marx/graphics-internal/text/utf8.hpp"
 #include "marx/graphics-internal/vector.hpp"
 
 using PFNGLXSWAPINTERVALEXTPROC = void (*)(Display *, GLXDrawable, int);
 using string                    = std::string;
 using Clock                     = std::chrono::steady_clock;
 namespace keyboard              = marx::graphics::keyboard;
+namespace mouse                 = marx::graphics::mouse;
+namespace utf8                  = marx::graphics::utf8;
 
 namespace
 {
@@ -47,9 +57,28 @@ static XVisualInfo *Visual_   = nullptr;
 static Colormap     Colormap_ = 0;
 static GLXContext   Context_  = nullptr;
 
+static XIM InputMethod_  = nullptr;
+static XIC InputContext_ = nullptr;
+
 PFNGLXSWAPINTERVALEXTPROC SwapInterval_;
 
 std::vector<float> Data_;
+
+std::deque<std::unique_ptr<marx::graphics::event>> Pending_;
+std::array<bool, 256>                              HeldKeys_{};
+bool                                               Focused_ = false;
+
+marx::iVector2 MinSize_;
+marx::iVector2 MaxSize_;
+
+marx::iVector2 ReportedSize_;
+marx::iVector2 ReportedPosition_;
+
+std::array<Cursor, 8>   Cursors_{};
+Cursor                  BlankCursor_   = 0;
+marx::graphics::cursors CurrentCursor_ = marx::graphics::cursors::Arrow;
+bool                    CursorVisible_ = true;
+bool                    CursorApplied_ = false;
 
 keyboard::keys x11_to_kb(KeySym Key)
 {
@@ -276,24 +305,34 @@ keyboard::keys x11_to_kb(KeySym Key)
       return K::Slash;
 
     case XK_KP_0:
+    case XK_KP_Insert:
       return K::KeypadZero;
     case XK_KP_1:
+    case XK_KP_End:
       return K::KeypadOne;
     case XK_KP_2:
+    case XK_KP_Down:
       return K::KeypadTwo;
     case XK_KP_3:
+    case XK_KP_Next:
       return K::KeypadThree;
     case XK_KP_4:
+    case XK_KP_Left:
       return K::KeypadFour;
     case XK_KP_5:
+    case XK_KP_Begin:
       return K::KeypadFive;
     case XK_KP_6:
+    case XK_KP_Right:
       return K::KeypadSix;
     case XK_KP_7:
+    case XK_KP_Home:
       return K::KeypadSeven;
     case XK_KP_8:
+    case XK_KP_Up:
       return K::KeypadEight;
     case XK_KP_9:
+    case XK_KP_Prior:
       return K::KeypadNine;
 
     case XK_KP_Add:
@@ -305,6 +344,7 @@ keyboard::keys x11_to_kb(KeySym Key)
     case XK_KP_Divide:
       return K::KeypadDivide;
     case XK_KP_Decimal:
+    case XK_KP_Delete:
       return K::KeypadDecimal;
     case XK_KP_Enter:
       return K::KeypadEnter;
@@ -329,6 +369,187 @@ keyboard::keys x11_to_kb(KeySym Key)
   }
 }
 
+keyboard::keys get_key(XKeyEvent &Event)
+{
+  char   Buffer[32];
+  KeySym Symbol = NoSymbol;
+
+  XLookupString(&Event, Buffer, sizeof(Buffer), &Symbol, nullptr);
+
+  KeySym Lower, Upper;
+  XConvertCase(Symbol, &Lower, &Upper);
+
+  keyboard::keys Key = x11_to_kb(Lower);
+
+  if (Key == keyboard::keys::Null)
+    Key = x11_to_kb(XLookupKeysym(&Event, 0));
+
+  return Key;
+}
+
+string get_text(XKeyEvent &Event)
+{
+  char   Buffer[64];
+  KeySym Symbol;
+
+  if (InputContext_)
+  {
+    Status LookupStatus = 0;
+
+    const int Length = Xutf8LookupString(
+        InputContext_, &Event, Buffer, sizeof(Buffer), &Symbol, &LookupStatus);
+
+    if (LookupStatus != XLookupChars && LookupStatus != XLookupBoth)
+      return "";
+
+    return string(Buffer, Length);
+  }
+
+  const int Length =
+      XLookupString(&Event, Buffer, sizeof(Buffer), &Symbol, nullptr);
+
+  string Text;
+
+  for (int Index = 0; Index < Length; ++Index)
+    Text += utf8::encode(static_cast<unsigned char>(Buffer[Index]));
+
+  return Text;
+}
+
+bool is_printable(const string &Text)
+{
+  if (Text.empty())
+    return false;
+
+  const unsigned char First = Text[0];
+  return First >= 0x20 && First != 0x7F;
+}
+
+keyboard::modifiers get_modifiers(unsigned int State)
+{
+  keyboard::modifiers Modifiers;
+
+  Modifiers.Shift   = (State & ShiftMask) != 0;
+  Modifiers.Control = (State & ControlMask) != 0;
+  Modifiers.Alt     = (State & Mod1Mask) != 0;
+  Modifiers.Super   = (State & Mod4Mask) != 0;
+
+  return Modifiers;
+}
+
+mouse::buttons x11_to_mouse(unsigned int Button)
+{
+  switch (Button)
+  {
+    case Button1:
+      return mouse::buttons::Left;
+    case Button2:
+      return mouse::buttons::Middle;
+    case Button3:
+      return mouse::buttons::Right;
+    default:
+      return mouse::buttons::Null;
+  }
+}
+
+unsigned int get_cursor_shape(marx::graphics::cursors Shape)
+{
+  using C = marx::graphics::cursors;
+
+  switch (Shape)
+  {
+    case C::Text:
+      return XC_xterm;
+    case C::Hand:
+      return XC_hand2;
+    case C::Crosshair:
+      return XC_crosshair;
+    case C::Wait:
+      return XC_watch;
+    case C::Move:
+      return XC_fleur;
+    case C::ResizeHorizontal:
+      return XC_sb_h_double_arrow;
+    case C::ResizeVertical:
+      return XC_sb_v_double_arrow;
+    default:
+      return XC_left_ptr;
+  }
+}
+
+Cursor get_cursor(marx::graphics::cursors Shape)
+{
+  Cursor &Created = Cursors_[static_cast<std::size_t>(Shape)];
+
+  if (!Created)
+    Created = XCreateFontCursor(Display_, get_cursor_shape(Shape));
+
+  return Created;
+}
+
+Cursor get_blank_cursor()
+{
+  if (BlankCursor_)
+    return BlankCursor_;
+
+  const char Data[1] = { 0 };
+  XColor     Black{};
+
+  Pixmap Bitmap = XCreateBitmapFromData(Display_, Window_, Data, 1, 1);
+
+  BlankCursor_ =
+      XCreatePixmapCursor(Display_, Bitmap, Bitmap, &Black, &Black, 0, 0);
+
+  XFreePixmap(Display_, Bitmap);
+
+  return BlankCursor_;
+}
+
+void apply_cursor()
+{
+  if (!Display_ || !Window_)
+    return;
+
+  XDefineCursor(Display_, Window_,
+                CursorVisible_ ? get_cursor(CurrentCursor_)
+                               : get_blank_cursor());
+  XFlush(Display_);
+
+  CursorApplied_ = true;
+}
+
+void apply_size_hints()
+{
+  if (!Display_ || !Window_)
+    return;
+
+  XSizeHints Hints{};
+  long       Supplied = 0;
+
+  XGetWMNormalHints(Display_, Window_, &Hints, &Supplied);
+
+  if (MinSize_.x > 0 && MinSize_.y > 0)
+  {
+    Hints.flags |= PMinSize;
+    Hints.min_width  = MinSize_.x;
+    Hints.min_height = MinSize_.y;
+  }
+  else
+    Hints.flags &= ~PMinSize;
+
+  if (MaxSize_.x > 0 && MaxSize_.y > 0)
+  {
+    Hints.flags |= PMaxSize;
+    Hints.max_width  = MaxSize_.x;
+    Hints.max_height = MaxSize_.y;
+  }
+  else
+    Hints.flags &= ~PMaxSize;
+
+  XSetWMNormalHints(Display_, Window_, &Hints);
+  XFlush(Display_);
+}
+
 static string VertShader =
     "#version 330 core\n"
     "\n"
@@ -343,20 +564,15 @@ static string VertShader =
     "\n"
     "void main()\n"
     "{\n"
-    "  vec2 Pos = (VertPos / ScreenSize) * 2.0 - 1.0;\n"
-    "  Pos.y = -Pos.y;\n"
-    "\n"
-    "  vec2 CenterPos = (Center / ScreenSize) * 2.0 - 1.0;\n"
-    "  CenterPos.y = -CenterPos.y;\n"
-    "\n"
-    "  Pos -= CenterPos;\n"
-    "\n"
     "  float Angle = radians(Rotation);\n"
     "  float CosA = cos(Angle);\n"
     "  float SinA = sin(Angle);\n"
     "\n"
-    "  Pos = mat2(CosA, SinA, -SinA, CosA) * Pos;\n"
-    "  Pos += CenterPos;\n"
+    "  mat2 Rotate = mat2(CosA, -SinA, SinA, CosA);\n"
+    "  vec2 Pos = Rotate * (VertPos - Center) + Center;\n"
+    "\n"
+    "  Pos = (Pos / ScreenSize) * 2.0 - 1.0;\n"
+    "  Pos.y = -Pos.y;\n"
     "\n"
     "  gl_Position = vec4(Pos, 0.0, 1.0);\n"
     "  FragColor = VertColor;\n"
@@ -480,6 +696,8 @@ Display *get_display()
 
 window::window(iVector2 Size, string Name)
 {
+  std::setlocale(LC_CTYPE, "");
+
   Display_ = XOpenDisplay(nullptr);
 
   if (!Display_)
@@ -515,7 +733,8 @@ window::window(iVector2 Size, string Name)
   xwa.colormap         = Colormap_;
   xwa.event_mask = ExposureMask | KeyPressMask | KeyReleaseMask |
                    ButtonPressMask | ButtonReleaseMask | PointerMotionMask |
-                   StructureNotifyMask | FocusChangeMask;
+                   StructureNotifyMask | FocusChangeMask | EnterWindowMask |
+                   LeaveWindowMask;
 
   Window_ = XCreateWindow(
       Display_, Root_, 500, 500, Size.x, Size.y, 0, Visual_->depth, InputOutput,
@@ -579,6 +798,28 @@ window::window(iVector2 Size, string Name)
 
   set_size(Size);
   set_name(Name);
+
+  ReportedSize_ = Size;
+
+  if (XSupportsLocale())
+  {
+    XSetLocaleModifiers("");
+    InputMethod_ = XOpenIM(Display_, nullptr, nullptr, nullptr);
+  }
+
+  if (InputMethod_)
+    InputContext_ = XCreateIC(InputMethod_, XNInputStyle,
+                              XIMPreeditNothing | XIMStatusNothing,
+                              XNClientWindow, Window_, XNFocusWindow, Window_,
+                              nullptr);
+
+  if (InputContext_)
+  {
+    unsigned long FilterEvents = 0;
+    XGetICValues(InputContext_, XNFilterEvents, &FilterEvents, nullptr);
+    XSelectInput(Display_, Window_, xwa.event_mask | FilterEvents);
+    XSetICFocus(InputContext_);
+  }
 
   XMapWindow(Display_, Window_);
   XFlush(Display_);
@@ -673,6 +914,34 @@ iVector2 window::get_size() const
   return Size_;
 }
 
+void window::set_min_size(iVector2 Size)
+{
+  MinSize_ = Size;
+  apply_size_hints();
+}
+
+void window::set_max_size(iVector2 Size)
+{
+  MaxSize_ = Size;
+  apply_size_hints();
+}
+
+void window::set_resizable(bool Resizable)
+{
+  if (Resizable)
+  {
+    MinSize_ = { 0, 0 };
+    MaxSize_ = { 0, 0 };
+  }
+  else
+  {
+    MinSize_ = get_size();
+    MaxSize_ = MinSize_;
+  }
+
+  apply_size_hints();
+}
+
 void window::set_position(iVector2 Position)
 {
   if (Display_ && Window_)
@@ -725,6 +994,95 @@ string window::get_name() const
   return Name_;
 }
 
+void window::set_fullscreen(bool Fullscreen)
+{
+  if (!Display_ || !Window_)
+    return;
+
+  XEvent Message{};
+
+  Message.xclient.type         = ClientMessage;
+  Message.xclient.window       = Window_;
+  Message.xclient.message_type = XInternAtom(Display_, "_NET_WM_STATE", False);
+  Message.xclient.format       = 32;
+  Message.xclient.data.l[0]    = Fullscreen ? 1 : 0;
+  Message.xclient.data.l[1] =
+      XInternAtom(Display_, "_NET_WM_STATE_FULLSCREEN", False);
+
+  XSendEvent(Display_, Root_, False,
+             SubstructureRedirectMask | SubstructureNotifyMask, &Message);
+  XFlush(Display_);
+}
+
+bool window::is_fullscreen() const
+{
+  if (!Display_ || !Window_)
+    return false;
+
+  const Atom State = XInternAtom(Display_, "_NET_WM_STATE", False);
+  const Atom Fullscreen =
+      XInternAtom(Display_, "_NET_WM_STATE_FULLSCREEN", False);
+
+  Atom           Type;
+  int            Format;
+  unsigned long  Count, After;
+  unsigned char *Data = nullptr;
+
+  if (XGetWindowProperty(Display_, Window_, State, 0, 1024, False, XA_ATOM,
+                         &Type, &Format, &Count, &After, &Data) != Success ||
+      !Data)
+    return false;
+
+  const Atom *Atoms = reinterpret_cast<const Atom *>(Data);
+  bool        Found = false;
+
+  for (unsigned long Index = 0; Index < Count; ++Index)
+    if (Atoms[Index] == Fullscreen)
+      Found = true;
+
+  XFree(Data);
+
+  return Found;
+}
+
+bool window::is_focused() const
+{
+  return Focused_;
+}
+
+iVector2 window::get_mouse_position() const
+{
+  if (!Display_ || !Window_)
+    return { 0, 0 };
+
+  Window       Root, Child;
+  int          RootX, RootY, WindowX, WindowY;
+  unsigned int Mask;
+
+  XQueryPointer(Display_, Window_, &Root, &Child, &RootX, &RootY, &WindowX,
+                &WindowY, &Mask);
+
+  return { WindowX, WindowY };
+}
+
+void window::set_cursor(cursors Shape)
+{
+  if (Shape == CurrentCursor_ && CursorApplied_)
+    return;
+
+  CurrentCursor_ = Shape;
+  apply_cursor();
+}
+
+void window::set_cursor_visible(bool Visible)
+{
+  if (Visible == CursorVisible_ && CursorApplied_)
+    return;
+
+  CursorVisible_ = Visible;
+  apply_cursor();
+}
+
 void window::enable_vsync(bool Enable)
 {
   if (SwapInterval_)
@@ -739,12 +1097,28 @@ void window::set_fps_cap(uint fpsCap)
 
 std::unique_ptr<event> window::poll()
 {
-  if (Closed_ || XPending(Display_) <= 0)
+  if (Closed_)
+    return nullptr;
+
+  if (!Pending_.empty())
+  {
+    std::unique_ptr<event> Next = std::move(Pending_.front());
+    Pending_.pop_front();
+    return Next;
+  }
+
+  if (XPending(Display_) <= 0)
     return nullptr;
 
   std::unique_ptr<event> Event = std::make_unique<event>();
 
   XNextEvent(Display_, &Event_);
+
+  if (Event_.type == KeyRelease)
+    HeldKeys_[Event_.xkey.keycode] = false;
+
+  if (XFilterEvent(&Event_, None))
+    return Event;
 
   switch (Event_.type)
   {
@@ -765,12 +1139,13 @@ std::unique_ptr<event> window::poll()
     {
       XConfigureEvent e = Event_.xconfigure;
 
-      bool Resized = e.width != Size_.x || e.height != Size_.y;
-      bool Moved   = e.x != Position_.x || e.y != Position_.y;
+      bool Resized = e.width != ReportedSize_.x || e.height != ReportedSize_.y;
+      bool Moved   = e.x != ReportedPosition_.x || e.y != ReportedPosition_.y;
 
       if (Resized)
       {
-        Size_ = { e.width, e.height };
+        ReportedSize_ = { e.width, e.height };
+        Size_         = ReportedSize_;
         glViewport(0, 0, e.width, e.height);
         Event->set<events::Resized>(e.width, e.height);
         return Event;
@@ -778,7 +1153,8 @@ std::unique_ptr<event> window::poll()
 
       if (Moved)
       {
-        Position_ = { e.x, e.y };
+        ReportedPosition_ = { e.x, e.y };
+        Position_         = ReportedPosition_;
         Event->set<events::Moved>(e.x, e.y);
         return Event;
       }
@@ -787,49 +1163,122 @@ std::unique_ptr<event> window::poll()
     }
 
     case FocusIn:
+      Focused_ = true;
+
+      if (InputContext_)
+        XSetICFocus(InputContext_);
+
       Event->set<events::Focused>();
       break;
     case FocusOut:
+      Focused_ = false;
+      HeldKeys_.fill(false);
+
+      if (InputContext_)
+        XUnsetICFocus(InputContext_);
+
       Event->set<events::Unfocused>();
       break;
 
     case KeyPress:
     {
-      char   Buffer[32];
-      KeySym Symbol;
+      XKeyEvent &Press = Event_.xkey;
 
-      XComposeStatus Compose{};
-      int Length = XLookupString(&Event_.xkey, Buffer, sizeof(Buffer), &Symbol,
-                                 &Compose);
+      const keyboard::keys      Key       = get_key(Press);
+      const keyboard::modifiers Modifiers = get_modifiers(Press.state);
 
-      keyboard::keys Key = x11_to_kb(Symbol);
+      const bool Repeat = Press.keycode != 0 && HeldKeys_[Press.keycode];
 
-      char Character = Length == 1 ? Buffer[0] : '\0';
+      if (Press.keycode != 0)
+        HeldKeys_[Press.keycode] = true;
+
+      const string Text = get_text(Press);
+
+      char Character = Text.size() == 1 ? Text[0] : '\0';
 
       if (Character == '\r')
         Character = '\n';
 
-      Event->set<events::KeyDown>(Key, Character);
+      Event->set<events::KeyDown>(Key, Character, Modifiers, Repeat);
+
+      if (is_printable(Text) && !Modifiers.Control && !Modifiers.Alt &&
+          !Modifiers.Super)
+      {
+        Pending_.push_back(std::make_unique<event>());
+        Pending_.back()->set<events::TextInput>(Text);
+      }
+
       break;
     }
     case KeyRelease:
     {
-      keyboard::keys Key = x11_to_kb(XLookupKeysym(&Event_.xkey, 0));
+      XKeyEvent &Release = Event_.xkey;
 
-      Event->set<events::KeyUp>(Key, keyboard::key_to_ascii(Key));
+      const keyboard::keys Key = get_key(Release);
+
+      Event->set<events::KeyUp>(Key, keyboard::key_to_ascii(Key),
+                                get_modifiers(Release.state));
       break;
     }
 
     case MotionNotify:
-      Event->set<events::MouseMove>(static_cast<uint>(Event_.xmotion.x),
-                                    static_cast<uint>(Event_.xmotion.y));
+      Event->set<events::MouseMove>(Event_.xmotion.x, Event_.xmotion.y);
       break;
+
+    case EnterNotify:
+      if (Event_.xcrossing.mode == NotifyNormal)
+        Event->set<events::MouseEntered>(Event_.xcrossing.x,
+                                         Event_.xcrossing.y);
+      break;
+    case LeaveNotify:
+      if (Event_.xcrossing.mode == NotifyNormal)
+        Event->set<events::MouseLeft>(Event_.xcrossing.x, Event_.xcrossing.y);
+      break;
+
     case ButtonPress:
-      Event->set<events::ButtonDown>(Event_.xbutton.button);
+    {
+      XButtonEvent &Press = Event_.xbutton;
+
+      const keyboard::modifiers Modifiers = get_modifiers(Press.state);
+
+      if (Press.button >= Button4 && Press.button <= 7)
+      {
+        float DeltaX = 0.f;
+        float DeltaY = 0.f;
+
+        if (Press.button == Button4)
+          DeltaY = 1.f;
+        else if (Press.button == Button5)
+          DeltaY = -1.f;
+        else if (Press.button == 6)
+          DeltaX = -1.f;
+        else
+          DeltaX = 1.f;
+
+        Event->set<events::Scrolled>(Press.x, Press.y, DeltaX, DeltaY,
+                                     Modifiers);
+        break;
+      }
+
+      const mouse::buttons Button = x11_to_mouse(Press.button);
+
+      if (Button != mouse::buttons::Null)
+        Event->set<events::ButtonDown>(Button, Press.x, Press.y, Modifiers);
+
       break;
+    }
     case ButtonRelease:
-      Event->set<events::ButtonUp>(Event_.xbutton.button);
+    {
+      XButtonEvent &Release = Event_.xbutton;
+
+      const mouse::buttons Button = x11_to_mouse(Release.button);
+
+      if (Button != mouse::buttons::Null)
+        Event->set<events::ButtonUp>(Button, Release.x, Release.y,
+                                     get_modifiers(Release.state));
+
       break;
+    }
 
     default:
       break;
@@ -840,8 +1289,28 @@ std::unique_ptr<event> window::poll()
 
 void window::clear(color Color) const
 {
+  glDisable(GL_SCISSOR_TEST);
   glClearColor(Color.r / 255.f, Color.g / 255.f, Color.b / 255.f, 1.f);
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+}
+
+void window::set_clip(fVector2 Position, fVector2 Size) const
+{
+  const iVector2 WindowSize = get_size();
+
+  const int x      = static_cast<int>(std::round(Position.x));
+  const int Width  = std::max(0, static_cast<int>(std::round(Size.x)));
+  const int Height = std::max(0, static_cast<int>(std::round(Size.y)));
+  const int y =
+      WindowSize.y - static_cast<int>(std::round(Position.y)) - Height;
+
+  glEnable(GL_SCISSOR_TEST);
+  glScissor(x, y, Width, Height);
+}
+
+void window::reset_clip() const
+{
+  glDisable(GL_SCISSOR_TEST);
 }
 
 void window::draw(const rectangle &Rectangle) const
@@ -1068,6 +1537,40 @@ void window::close()
     glXDestroyContext(Display_, Context_);
     Context_ = nullptr;
   }
+
+  if (InputContext_)
+  {
+    XDestroyIC(InputContext_);
+    InputContext_ = nullptr;
+  }
+
+  if (InputMethod_)
+  {
+    XCloseIM(InputMethod_);
+    InputMethod_ = nullptr;
+  }
+
+  if (Display_)
+  {
+    for (Cursor &Created : Cursors_)
+    {
+      if (Created)
+        XFreeCursor(Display_, Created);
+
+      Created = 0;
+    }
+
+    if (BlankCursor_)
+      XFreeCursor(Display_, BlankCursor_);
+
+    BlankCursor_ = 0;
+  }
+
+  CursorApplied_ = false;
+
+  Pending_.clear();
+  HeldKeys_.fill(false);
+  Focused_ = false;
 
   if (Display_ && Window_)
   {

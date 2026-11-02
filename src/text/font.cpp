@@ -58,6 +58,31 @@ font::font(const std::string &Path, uint Size)
   load(Path, Size);
 }
 
+font::font(const font &Other)
+{
+  if (Other.is_loaded())
+    load(Other.Path_, Other.Size_);
+}
+
+font::font(const font &Other, uint Size)
+{
+  if (Other.is_loaded())
+    load(Other.Path_, Size);
+}
+
+font &font::operator=(const font &Other)
+{
+  if (this == &Other)
+    return *this;
+
+  if (Other.is_loaded())
+    load(Other.Path_, Other.Size_);
+  else
+    unload();
+
+  return *this;
+}
+
 font::~font()
 {
   unload();
@@ -91,6 +116,7 @@ bool font::load(const std::string &Path, uint Size)
     return false;
   }
 
+  Path_       = Path;
   Size_       = Size;
   Ascent_     = std::round(Face_->size->metrics.ascender / 64.f);
   LineHeight_ = std::round(Face_->size->metrics.height / 64.f);
@@ -177,6 +203,8 @@ void font::unload()
     FT_Done_Face(Face_);
     release_library();
   }
+
+  Path_.clear();
 
   Face_       = nullptr;
   Size_       = 0;

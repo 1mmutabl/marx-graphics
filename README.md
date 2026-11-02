@@ -12,6 +12,9 @@ A lightweight Linux graphics library with one goal: **make working with windows 
 - A simple API inspired by the ease of use of SFML.
 - Window creation and event polling.
 - Basic rendering, including rectangles, circles, lines, and text.
+- Mouse, keyboard, and text-input events, including click positions, scrolling, modifier keys, and key repeat.
+- UTF-8 text rendering and typing, with word wrap, alignment, spacing, and caret positions.
+- Clipping, cursor shapes, fullscreen, and window size limits.
 
 ## Requirements
 
@@ -141,6 +144,11 @@ Contributions are not currently accepted.
 # AI
 AI has been used in some parts of this project, it was used to debug after hour long sessions, completing time wasting tasks, like repetitive typing, especially found in the keyboard input header and to polish this markdown.
 Keep in mind the entire project is still human made with human ideas.
+
+## Third-party software
+
+- [FreeType](https://freetype.org) is bundled in `src/freetype/` and used for text rendering. Portions of this software are copyright © 2026 The FreeType Project (https://freetype.org). All rights reserved. It is used under the FreeType License (`FTL.TXT`).
+- [GLAD](https://github.com/Dav1dde/glad) is used to load OpenGL.
 
 ## License
 

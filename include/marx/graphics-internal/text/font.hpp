@@ -25,10 +25,11 @@ public:
 
   font() = default;
   font(const std::string &Path, uint Size = 32);
+  font(const font &Other);
+  font(const font &Other, uint Size);
   ~font();
 
-  font(const font &)            = delete;
-  font &operator=(const font &) = delete;
+  font &operator=(const font &Other);
 
   bool load(const std::string &Path, uint Size = 32);
   bool is_loaded() const;
@@ -46,6 +47,7 @@ private:
   void         unload();
   const glyph &load_glyph(char32_t Codepoint);
 
+  std::string  Path_;
   FT_FaceRec_ *Face_       = nullptr;
   uint         Size_       = 0;
   float        Ascent_     = 0.f;

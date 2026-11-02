@@ -1,6 +1,6 @@
 #!/usr/bin/env fish
 
-set template "keyboard"
+set template "todo"
 
 make clean
 bear -- make TEMPLATE=$template

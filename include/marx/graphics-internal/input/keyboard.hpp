@@ -64,6 +64,14 @@ enum class keys
 };
 // clang-format on
 
+struct modifiers
+{
+  bool Shift   = false;
+  bool Control = false;
+  bool Alt     = false;
+  bool Super   = false;
+};
+
 char key_to_ascii(keys Key);
 bool key_down(keys Key);
 

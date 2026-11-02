@@ -1,10 +1,12 @@
 #pragma once
 
 #include <iostream>
+#include <string>
 #include <utility>
 #include <variant>
 
 #include "input/keyboard.hpp"
+#include "input/mouse.hpp"
 
 namespace marx::graphics::events
 {
@@ -30,29 +32,58 @@ struct Unfocused
 
 struct KeyDown
 {
-  keyboard::keys Key;
-  char           Ascii;
+  keyboard::keys      Key;
+  char                Ascii;
+  keyboard::modifiers Modifiers;
+  bool                Repeat;
 };
 
 struct KeyUp
 {
-  keyboard::keys Key;
-  char           Ascii;
+  keyboard::keys      Key;
+  char                Ascii;
+  keyboard::modifiers Modifiers;
+};
+
+struct TextInput
+{
+  std::string Text;
 };
 
 struct MouseMove
 {
-  uint x, y;
+  int x, y;
+};
+
+struct MouseEntered
+{
+  int x, y;
+};
+
+struct MouseLeft
+{
+  int x, y;
 };
 
 struct ButtonDown
 {
-  uint Button;
+  mouse::buttons      Button;
+  int                 x, y;
+  keyboard::modifiers Modifiers;
 };
 
 struct ButtonUp
 {
-  uint Button;
+  mouse::buttons      Button;
+  int                 x, y;
+  keyboard::modifiers Modifiers;
+};
+
+struct Scrolled
+{
+  int                 x, y;
+  float               DeltaX, DeltaY;
+  keyboard::modifiers Modifiers;
 };
 } // namespace marx::graphics::events
 
@@ -61,8 +92,9 @@ namespace marx::graphics
 using EventData =
     std::variant<std::monostate, events::Close, events::Moved, events::Resized,
                  events::Focused, events::Unfocused, events::KeyDown,
-                 events::KeyUp, events::MouseMove, events::ButtonDown,
-                 events::ButtonUp>;
+                 events::KeyUp, events::TextInput, events::MouseMove,
+                 events::MouseEntered, events::MouseLeft, events::ButtonDown,
+                 events::ButtonUp, events::Scrolled>;
 
 class event
 {

@@ -20,26 +20,6 @@
     "output": "build/src/vector.o"
   },
   {
-    "file": "src/window.cpp",
-    "arguments": [
-      "/usr/bin/g++",
-      "-std=c++23",
-      "-Wall",
-      "-Wextra",
-      "-fPIC",
-      "-Iinclude",
-      "-Iinclude/marx/graphics-internal/freetype",
-      "-Isrc",
-      "-Idependencies",
-      "-c",
-      "src/window.cpp",
-      "-o",
-      "build/src/window.o"
-    ],
-    "directory": "/home/max/dev/cpp/marx-graphics",
-    "output": "build/src/window.o"
-  },
-  {
     "file": "src/input/keyboard.cpp",
     "arguments": [
       "/usr/bin/g++",
@@ -58,6 +38,26 @@
     ],
     "directory": "/home/max/dev/cpp/marx-graphics",
     "output": "build/src/input/keyboard.o"
+  },
+  {
+    "file": "src/input/mouse.cpp",
+    "arguments": [
+      "/usr/bin/g++",
+      "-std=c++23",
+      "-Wall",
+      "-Wextra",
+      "-fPIC",
+      "-Iinclude",
+      "-Iinclude/marx/graphics-internal/freetype",
+      "-Isrc",
+      "-Idependencies",
+      "-c",
+      "src/input/mouse.cpp",
+      "-o",
+      "build/src/input/mouse.o"
+    ],
+    "directory": "/home/max/dev/cpp/marx-graphics",
+    "output": "build/src/input/mouse.o"
   },
   {
     "file": "src/shapes/circle.cpp",
@@ -140,6 +140,26 @@
     "output": "build/src/text/font.o"
   },
   {
+    "file": "src/text/utf8.cpp",
+    "arguments": [
+      "/usr/bin/g++",
+      "-std=c++23",
+      "-Wall",
+      "-Wextra",
+      "-fPIC",
+      "-Iinclude",
+      "-Iinclude/marx/graphics-internal/freetype",
+      "-Isrc",
+      "-Idependencies",
+      "-c",
+      "src/text/utf8.cpp",
+      "-o",
+      "build/src/text/utf8.o"
+    ],
+    "directory": "/home/max/dev/cpp/marx-graphics",
+    "output": "build/src/text/utf8.o"
+  },
+  {
     "file": "src/text/text.cpp",
     "arguments": [
       "/usr/bin/g++",
@@ -178,6 +198,26 @@
     ],
     "directory": "/home/max/dev/cpp/marx-graphics",
     "output": "build/src/clock.o"
+  },
+  {
+    "file": "src/window.cpp",
+    "arguments": [
+      "/usr/bin/g++",
+      "-std=c++23",
+      "-Wall",
+      "-Wextra",
+      "-fPIC",
+      "-Iinclude",
+      "-Iinclude/marx/graphics-internal/freetype",
+      "-Isrc",
+      "-Idependencies",
+      "-c",
+      "src/window.cpp",
+      "-o",
+      "build/src/window.o"
+    ],
+    "directory": "/home/max/dev/cpp/marx-graphics",
+    "output": "build/src/window.o"
   },
   {
     "file": "src/glad/gl.c",
@@ -580,7 +620,7 @@
     "output": "build/src/freetype/truetype/truetype.o"
   },
   {
-    "file": "templates/keyboard.cpp",
+    "file": "templates/todo.cpp",
     "arguments": [
       "/usr/bin/g++",
       "-std=c++23",
@@ -591,11 +631,11 @@
       "-Iinclude/marx/graphics-internal/freetype",
       "-Isrc",
       "-Idependencies",
-      "templates/keyboard.cpp",
+      "templates/todo.cpp",
       "-o",
-      "bin/keyboard"
+      "bin/todo"
     ],
     "directory": "/home/max/dev/cpp/marx-graphics",
-    "output": "bin/keyboard"
+    "output": "bin/todo"
   }
 ]
