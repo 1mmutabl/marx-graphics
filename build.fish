@@ -1,6 +1,6 @@
 #!/usr/bin/env fish
 
-set template "todo"
+set template config
 
 make clean
 bear -- make TEMPLATE=$template

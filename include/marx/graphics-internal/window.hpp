@@ -12,6 +12,7 @@
 #include "shapes/rectangle.hpp"
 #include "text/text.hpp"
 #include "vector.hpp"
+#include "window_config.hpp"
 
 struct _XDisplay;
 
@@ -35,7 +36,8 @@ class window
 {
 public:
 
-  window(iVector2 Size = { 800, 600 }, std::string Name = "marx graphics");
+  window(iVector2 Size = { 800, 600 }, std::string Name = "marx graphics",
+         window_config Config = window_config());
   ~window();
 
   void     set_size(iVector2 Size);
@@ -55,6 +57,10 @@ public:
   bool is_fullscreen() const;
 
   bool is_focused() const;
+
+  void show();
+  void hide();
+  bool is_visible() const;
 
   iVector2 get_mouse_position() const;
 

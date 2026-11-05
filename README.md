@@ -15,6 +15,7 @@ A lightweight Linux graphics library with one goal: **make working with windows 
 - Mouse, keyboard, and text-input events, including click positions, scrolling, modifier keys, and key repeat.
 - UTF-8 text rendering and typing, with word wrap, alignment, spacing, and caret positions.
 - Clipping, cursor shapes, fullscreen, and window size limits.
+- Window config flags set before creation, such as maximized, fullscreen, undecorated, transparent, centered, and MSAA.
 
 ## Requirements
 

@@ -14,5 +14,6 @@
 #include "graphics-internal/text/utf8.hpp"
 #include "graphics-internal/vector.hpp"
 #include "graphics-internal/window.hpp"
+#include "graphics-internal/window_config.hpp"
 
 // IWYU pragma: end_exports

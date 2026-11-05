@@ -36,6 +36,7 @@
 #include "marx/graphics-internal/text/text.hpp"
 #include "marx/graphics-internal/text/utf8.hpp"
 #include "marx/graphics-internal/vector.hpp"
+#include "marx/graphics-internal/window_config.hpp"
 
 using PFNGLXSWAPINTERVALEXTPROC = void (*)(Display *, GLXDrawable, int);
 using string                    = std::string;
@@ -66,7 +67,8 @@ std::vector<float> Data_;
 
 std::deque<std::unique_ptr<marx::graphics::event>> Pending_;
 std::array<bool, 256>                              HeldKeys_{};
-bool                                               Focused_ = false;
+bool                                               Focused_     = false;
+bool                                               Transparent_ = false;
 
 marx::iVector2 MinSize_;
 marx::iVector2 MaxSize_;
@@ -550,6 +552,90 @@ void apply_size_hints()
   XFlush(Display_);
 }
 
+XVisualInfo *choose_visual(bool Alpha, bool Multisample)
+{
+  std::vector<int> Attributes = { GLX_RGBA, GLX_DOUBLEBUFFER, GLX_DEPTH_SIZE,
+                                  24 };
+
+  if (Alpha)
+    Attributes.insert(Attributes.end(), { GLX_ALPHA_SIZE, 8 });
+
+  if (Multisample)
+    Attributes.insert(Attributes.end(),
+                      { GLX_SAMPLE_BUFFERS, 1, GLX_SAMPLES, 4 });
+
+  Attributes.push_back(None);
+
+  return glXChooseVisual(Display_, Scr_, Attributes.data());
+}
+
+void apply_config(const marx::graphics::window_config &Config,
+                  marx::iVector2 Size, marx::iVector2 Position)
+{
+  using marx::graphics::config;
+
+  if (Config.has(config::Centered))
+  {
+    XSizeHints Hints{};
+
+    Hints.flags = USPosition | PPosition;
+    Hints.x     = Position.x;
+    Hints.y     = Position.y;
+
+    XSetWMNormalHints(Display_, Window_, &Hints);
+  }
+
+  if (Config.has(config::Fixed))
+  {
+    MinSize_ = Size;
+    MaxSize_ = Size;
+    apply_size_hints();
+  }
+
+  if (Config.has(config::Undecorated))
+  {
+    const Atom MotifHints = XInternAtom(Display_, "_MOTIF_WM_HINTS", False);
+
+    const long Hints[5] = { 2, 0, 0, 0, 0 };
+
+    XChangeProperty(Display_, Window_, MotifHints, MotifHints, 32,
+                    PropModeReplace,
+                    reinterpret_cast<const unsigned char *>(Hints), 5);
+  }
+
+  std::vector<Atom> States;
+
+  if (Config.has(config::Maximized))
+  {
+    States.push_back(
+        XInternAtom(Display_, "_NET_WM_STATE_MAXIMIZED_VERT", False));
+    States.push_back(
+        XInternAtom(Display_, "_NET_WM_STATE_MAXIMIZED_HORZ", False));
+  }
+
+  if (Config.has(config::Fullscreen))
+    States.push_back(XInternAtom(Display_, "_NET_WM_STATE_FULLSCREEN", False));
+
+  if (Config.has(config::Floating))
+    States.push_back(XInternAtom(Display_, "_NET_WM_STATE_ABOVE", False));
+
+  if (!States.empty())
+    XChangeProperty(Display_, Window_,
+                    XInternAtom(Display_, "_NET_WM_STATE", False), XA_ATOM, 32,
+                    PropModeReplace,
+                    reinterpret_cast<const unsigned char *>(States.data()),
+                    static_cast<int>(States.size()));
+
+  XWMHints Hints{};
+
+  Hints.flags = InputHint | StateHint;
+  Hints.input = True;
+  Hints.initial_state =
+      Config.has(config::Minimized) ? IconicState : NormalState;
+
+  XSetWMHints(Display_, Window_, &Hints);
+}
+
 static string VertShader =
     "#version 330 core\n"
     "\n"
@@ -694,7 +780,7 @@ Display *get_display()
   return Display_;
 }
 
-window::window(iVector2 Size, string Name)
+window::window(iVector2 Size, string Name, window_config Config)
 {
   std::setlocale(LC_CTYPE, "");
 
@@ -712,9 +798,23 @@ window::window(iVector2 Size, string Name)
   Scr_  = DefaultScreen(Display_);
   Root_ = RootWindow(Display_, Scr_);
 
-  int Attributes[] = { GLX_RGBA, GLX_DOUBLEBUFFER, GLX_DEPTH_SIZE, 24, None };
+  Visual_ = choose_visual(Config.has(config::Transparent),
+                          Config.has(config::Msaa));
 
-  Visual_ = glXChooseVisual(Display_, Scr_, Attributes);
+  if (!Visual_ && Config.has(config::Msaa))
+  {
+    std::cerr << "Multisampling is not available, continuing without it.\n";
+    Config.remove(config::Msaa);
+    Visual_ = choose_visual(Config.has(config::Transparent), false);
+  }
+
+  if (!Visual_ && Config.has(config::Transparent))
+  {
+    std::cerr << "A transparent visual is not available, continuing without "
+                 "transparency.\n";
+    Config.remove(config::Transparent);
+    Visual_ = choose_visual(false, false);
+  }
 
   if (!Visual_)
   {
@@ -724,11 +824,16 @@ window::window(iVector2 Size, string Name)
     std::terminate();
   }
 
+  Transparent_ = Config.has(config::Transparent) && Visual_->depth == 32;
+
+  if (Config.has(config::Transparent) && !Transparent_)
+    std::cerr << "The visual has no alpha channel, transparency is disabled.\n";
+
   Colormap_ = XCreateColormap(Display_, Root_, Visual_->visual, AllocNone);
 
   XSetWindowAttributes xwa{};
 
-  xwa.background_pixel = WhitePixel(Display_, Scr_);
+  xwa.background_pixel = Transparent_ ? 0 : WhitePixel(Display_, Scr_);
   xwa.border_pixel     = BlackPixel(Display_, Scr_);
   xwa.colormap         = Colormap_;
   xwa.event_mask = ExposureMask | KeyPressMask | KeyReleaseMask |
@@ -736,10 +841,16 @@ window::window(iVector2 Size, string Name)
                    StructureNotifyMask | FocusChangeMask | EnterWindowMask |
                    LeaveWindowMask;
 
+  iVector2 Start = { 500, 500 };
+
+  if (Config.has(config::Centered))
+    Start = { (DisplayWidth(Display_, Scr_) - Size.x) / 2,
+              (DisplayHeight(Display_, Scr_) - Size.y) / 2 };
+
   Window_ = XCreateWindow(
-      Display_, Root_, 500, 500, Size.x, Size.y, 0, Visual_->depth, InputOutput,
-      Visual_->visual, CWBackPixel | CWBorderPixel | CWColormap | CWEventMask,
-      &xwa);
+      Display_, Root_, Start.x, Start.y, Size.x, Size.y, 0, Visual_->depth,
+      InputOutput, Visual_->visual,
+      CWBackPixel | CWBorderPixel | CWColormap | CWEventMask, &xwa);
 
   Context_ = glXCreateContext(Display_, Visual_, nullptr, True);
 
@@ -790,7 +901,7 @@ window::window(iVector2 Size, string Name)
   SwapInterval_ = reinterpret_cast<PFNGLXSWAPINTERVALEXTPROC>(glXGetProcAddress(
       reinterpret_cast<const GLubyte *>("glXSwapIntervalEXT")));
 
-  enable_vsync(false);
+  enable_vsync(Config.has(config::Vsync));
 
   WM_DELETE_ = XInternAtom(Display_, "WM_DELETE_WINDOW", False);
 
@@ -800,6 +911,8 @@ window::window(iVector2 Size, string Name)
   set_name(Name);
 
   ReportedSize_ = Size;
+
+  apply_config(Config, Size, Start);
 
   if (XSupportsLocale())
   {
@@ -821,13 +934,19 @@ window::window(iVector2 Size, string Name)
     XSetICFocus(InputContext_);
   }
 
-  XMapWindow(Display_, Window_);
+  if (!Config.has(config::Hidden))
+    XMapWindow(Display_, Window_);
+
   XFlush(Display_);
 
   glViewport(0, 0, Size.x, Size.y);
 
   glEnable(GL_BLEND);
-  glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+  glBlendFuncSeparate(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA, GL_ONE,
+                      GL_ONE_MINUS_SRC_ALPHA);
+
+  if (Config.has(config::Msaa))
+    glEnable(GL_MULTISAMPLE);
 
   Shader_     = make_shader(VertShader, FragShader);
   TextShader_ = make_shader(TextVertShader, TextFragShader);
@@ -1048,6 +1167,37 @@ bool window::is_fullscreen() const
 bool window::is_focused() const
 {
   return Focused_;
+}
+
+void window::show()
+{
+  if (!Display_ || !Window_)
+    return;
+
+  XMapWindow(Display_, Window_);
+  XFlush(Display_);
+}
+
+void window::hide()
+{
+  if (!Display_ || !Window_)
+    return;
+
+  XUnmapWindow(Display_, Window_);
+  XFlush(Display_);
+}
+
+bool window::is_visible() const
+{
+  if (!Display_ || !Window_)
+    return false;
+
+  XWindowAttributes Attributes{};
+
+  if (!XGetWindowAttributes(Display_, Window_, &Attributes))
+    return false;
+
+  return Attributes.map_state != IsUnmapped;
 }
 
 iVector2 window::get_mouse_position() const
@@ -1289,8 +1439,11 @@ std::unique_ptr<event> window::poll()
 
 void window::clear(color Color) const
 {
+  const float Alpha = Transparent_ ? Color.a / 255.f : 1.f;
+
   glDisable(GL_SCISSOR_TEST);
-  glClearColor(Color.r / 255.f, Color.g / 255.f, Color.b / 255.f, 1.f);
+  glClearColor(Color.r / 255.f * Alpha, Color.g / 255.f * Alpha,
+               Color.b / 255.f * Alpha, Alpha);
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 }
 

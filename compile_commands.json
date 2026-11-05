@@ -220,6 +220,26 @@
     "output": "build/src/window.o"
   },
   {
+    "file": "src/window_config.cpp",
+    "arguments": [
+      "/usr/bin/g++",
+      "-std=c++23",
+      "-Wall",
+      "-Wextra",
+      "-fPIC",
+      "-Iinclude",
+      "-Iinclude/marx/graphics-internal/freetype",
+      "-Isrc",
+      "-Idependencies",
+      "-c",
+      "src/window_config.cpp",
+      "-o",
+      "build/src/window_config.o"
+    ],
+    "directory": "/home/max/dev/cpp/marx-graphics",
+    "output": "build/src/window_config.o"
+  },
+  {
     "file": "src/glad/gl.c",
     "arguments": [
       "/usr/bin/gcc",
@@ -620,7 +640,7 @@
     "output": "build/src/freetype/truetype/truetype.o"
   },
   {
-    "file": "templates/todo.cpp",
+    "file": "templates/config.cpp",
     "arguments": [
       "/usr/bin/g++",
       "-std=c++23",
@@ -631,11 +651,11 @@
       "-Iinclude/marx/graphics-internal/freetype",
       "-Isrc",
       "-Idependencies",
-      "templates/todo.cpp",
+      "templates/config.cpp",
       "-o",
-      "bin/todo"
+      "bin/config"
     ],
     "directory": "/home/max/dev/cpp/marx-graphics",
-    "output": "bin/todo"
+    "output": "bin/config"
   }
 ]
