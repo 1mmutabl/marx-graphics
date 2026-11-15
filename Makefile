@@ -7,7 +7,8 @@ CXXFLAGS = -std=c++23 \
            -Iinclude -Iinclude/marx/graphics-internal/freetype -Isrc -Idependencies
 
 CFLAGS = -Wall -Wextra -fPIC -DFT2_BUILD_LIBRARY \
-         -Iinclude -Iinclude/marx/graphics-internal/freetype -Isrc -Idependencies
+         -Iinclude -Iinclude/marx/graphics-internal/freetype -Isrc -Idependencies \
+         -O2
 
 LDFLAGS = -Wl,--as-needed
 LDLIBS = -lX11 -lGL
