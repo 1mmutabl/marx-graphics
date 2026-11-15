@@ -1,0 +1,3 @@
+include/marx/graphics-internal/freetype/**
+src/freetype/**
+dependencies/**
