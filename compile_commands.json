@@ -680,7 +680,7 @@
     "output": "build/src/freetype/truetype/truetype.o"
   },
   {
-    "file": "templates/circle.cpp",
+    "file": "templates/text.cpp",
     "arguments": [
       "/usr/bin/g++",
       "-std=c++23",
@@ -691,11 +691,11 @@
       "-Iinclude/marx/graphics-internal/freetype",
       "-Isrc",
       "-Idependencies",
-      "templates/circle.cpp",
+      "templates/text.cpp",
       "-o",
-      "bin/circle"
+      "bin/text"
     ],
     "directory": "/home/max/dev/cpp/marx-graphics",
-    "output": "bin/circle"
+    "output": "bin/text"
   }
 ]

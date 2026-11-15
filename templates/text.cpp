@@ -22,7 +22,7 @@ int main()
     Window.enable_vsync(true);
 
     graphics::font Font;
-    Font.load("resources/Roboto.otf", 68);
+    Font.load("resources/Roboto.ttf", 68);
 
     graphics::text Text(Font);
     Text.set_string("Hello, marx!");

@@ -1,6 +1,6 @@
 #!/usr/bin/env fish
 
-set template circle
+set template text
 
 make clean
 bear -- make TEMPLATE=$template

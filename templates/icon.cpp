@@ -22,7 +22,7 @@ int main()
     graphics::texture Icon("resources/logo.png");
     Window.set_icon(Icon);
 
-    graphics::font Font("resources/Roboto.otf");
+    graphics::font Font("resources/Roboto.ttf");
 
     graphics::text Text(Font);
     Text.set_string("Look at the icon of the window!");

@@ -24,7 +24,7 @@ int main()
     // Window.enable_vsync(true);
 
     graphics::font Font;
-    Font.load("resources/Roboto.otf", 32);
+    Font.load("resources/Roboto.ttf", 32);
 
     float LineHeight = Font.get_line_height() * 1.1f;
 
