@@ -5,6 +5,7 @@ A lightweight Linux graphics library with one goal: **make working with windows 
 `marx-graphics` is a C++20 graphics library designed to provide a simple interface for window management and 2D rendering.
 
 > **Development status:** The library is still in its early stages and is missing some key components. Features and APIs may change.
+> **Current version:** v3.1.5
 
 ## Features
 
