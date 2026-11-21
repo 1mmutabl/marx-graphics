@@ -82,7 +82,8 @@ mouse::buttons      x11_to_mouse(unsigned int Button);
 void         apply_cursor();
 void         apply_size_hints();
 XVisualInfo *choose_visual(bool Alpha, bool Multisample);
-void apply_config(const window_config &Config, iVector2 Size, iVector2 Position);
+void         apply_config(const window_config &Config, iVector2 Size,
+                          iVector2 Position);
 
 uint make_shader(const string &Vertex, const string &Fragment);
 } // namespace marx::graphics::internal

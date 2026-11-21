@@ -11,6 +11,8 @@
  *   created, using config flags.
  */
 
+#include <cstdint>
+
 #include "marx/graphics.hpp"
 
 namespace graphics = marx::graphics;
@@ -23,12 +25,12 @@ int main()
     Config.add(graphics::config::Centered);
     Config.add(graphics::config::Msaa);
     Config.add(graphics::config::Vsync);
+    Config.add(graphics::config::Transparent);
     // Config.add(graphics::config::Maximized);
     // Config.add(graphics::config::Minimized);
     // Config.add(graphics::config::Fullscreen);
     // Config.add(graphics::config::Hidden);
     // Config.add(graphics::config::Undecorated);
-    // Config.add(graphics::config::Transparent);
     // Config.add(graphics::config::Floating);
     // Config.add(graphics::config::Fixed);
 
@@ -57,7 +59,8 @@ int main()
 
         Rectangle.set_rotation(Clock.get_time_passed() * 45.f);
 
-        Window.clear(graphics::color(24, 24, 30, 255));
+        Window.clear(
+            graphics::color(24, 24, 30, static_cast<uint8_t>(0.8 * 255)));
         Window.draw(Rectangle);
         Window.swap();
     }

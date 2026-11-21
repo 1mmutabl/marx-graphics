@@ -2,5 +2,6 @@
 .vscode/
 bin/
 build/
-compile_commands.json
 lib/
+marx-graphics.backup/
+compile_commands.json
